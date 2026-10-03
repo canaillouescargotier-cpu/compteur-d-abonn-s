@@ -5,17 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flexplay Live - Application Compteur</title>
 
-  <!-- Configuration PWA (Application installable) -->
+  <!-- Meta PWA -->
   <meta name="theme-color" content="#03045e">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Flexplay Live">
   <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/e/ef/Youtube_logo.png">
 
-  <!-- Manifeste intégré en ligne pour l'installation PWA -->
+  <!-- Manifeste PWA -->
   <link rel="manifest" id="manifest-placeholder">
 
-  <!-- Script pour les confettis -->
+  <!-- Confettis -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -27,7 +27,6 @@
 
     body {
       font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      /* Fond bleu dégradé */
       background: linear-gradient(135deg, #02010a, #041230, #032b53, #005f73);
       color: #ffffff;
       min-height: 100vh;
@@ -41,7 +40,7 @@
       position: relative;
     }
 
-    /* --- ANIMATION DES BULLES EN FOND --- */
+    /* BULLES EN FOND */
     .bubbles-container {
       position: absolute;
       top: 0;
@@ -77,7 +76,7 @@
       100% { transform: translateY(-110vh) scale(1.3); opacity: 0; }
     }
 
-    /* --- BOUTON D'INSTALLATION DE L'APPLICATION --- */
+    /* BANNIÈRE INSTALLATION */
     .install-banner {
       position: relative;
       z-index: 2;
@@ -86,8 +85,8 @@
       backdrop-filter: blur(10px);
       padding: 12px 24px;
       border-radius: 50px;
-      margin-bottom: 25px;
-      display: none; /* Affiché uniquement si l'application peut être installée */
+      margin-bottom: 20px;
+      display: flex;
       align-items: center;
       gap: 12px;
       box-shadow: 0 0 20px rgba(0, 245, 212, 0.2);
@@ -110,7 +109,7 @@
       background: #48cae4;
     }
 
-    /* --- CARTE PRINCIPALE --- */
+    /* CARTE PRINCIPALE */
     .card {
       position: relative;
       z-index: 1;
@@ -224,11 +223,18 @@
       border-radius: 10px;
       box-shadow: 0 0 12px rgba(0, 245, 212, 0.5);
     }
+
+    .manual-install-hint {
+      margin-top: 15px;
+      font-size: 0.8rem;
+      color: #90e0ef;
+      opacity: 0.8;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Bulles en arrière-plan -->
+  <!-- Bulles de fond -->
   <div class="bubbles-container">
     <div class="bubble"></div>
     <div class="bubble"></div>
@@ -239,9 +245,9 @@
     <div class="bubble"></div>
   </div>
 
-  <!-- Bannières d'installation PWA -->
+  <!-- Bannière d'installation -->
   <div class="install-banner" id="installBanner">
-    <span>📱 Installer l'application <strong>Flexplay Live</strong></span>
+    <span>📲 Installer l'application <strong>Flexplay Live</strong></span>
     <button class="install-btn" id="installBtn">Installer</button>
   </div>
 
@@ -269,14 +275,23 @@
         <div class="goal-bar-fill" id="goal-bar"></div>
       </div>
     </div>
+
+    <div class="manual-install-hint" id="manualHint">
+      Astuce : Tu peux aussi cliquer sur <strong>⋮ (ou le bouton Partager)</strong> puis <strong>"Ajouter à l'écran d'accueil"</strong> pour l'installer.
+    </div>
   </div>
 
   <script>
-    // --- GESTION DE L'INSTALLATION APPLICATION (PWA) ---
+    // --- SERVICE WORKER ---
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch((err) => console.log('SW Erreur:', err));
+    }
+
+    // --- MANIFEST PWA ---
     const manifestData = {
       "name": "Flexplay Live",
       "short_name": "Flexplay",
-      "start_url": ".",
+      "start_url": "./",
       "display": "standalone",
       "background_color": "#02010a",
       "theme_color": "#03045e",
@@ -314,7 +329,7 @@
       }
     });
 
-    // --- COMPTEUR & LOGIQUE YOUTUBE ---
+    // --- COMPTEUR YOUTUBE ---
     const CHANNEL_ID = 'UCcDHC9MCUe2-5z_vNUzyXEQ'; 
     let previousCount = null;
     let displayedCount = 0;
@@ -386,7 +401,7 @@
           previousCount = currentCount;
         }
       } catch (err) {
-        console.error("Erreur de récupération :", err);
+        console.error("Erreur :", err);
       }
     }
 
