@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Compteur d'abonnés GitHub - @canaillouescargotier</title>
+  <title>Compteur d'abonnés YouTube - @flexplay_officiel</title>
 
   <!-- Script pour les confettis -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -13,7 +13,7 @@
       margin: 0;
       padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      /* Dégradé de fonds bleus */
+      /* Fonds bleus en dégradé */
       background: linear-gradient(135deg, #0a1128, #001f54, #034078, #1282a2);
       color: #ffffff;
       height: 100vh;
@@ -32,13 +32,9 @@
       border: 1px solid rgba(255, 255, 255, 0.15);
     }
 
-    .avatar {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      margin-bottom: 15px;
-      border: 3px solid #00b4d8;
-      box-shadow: 0 0 15px rgba(0, 180, 216, 0.5);
+    .yt-icon {
+      width: 60px;
+      margin-bottom: 10px;
     }
 
     h1 {
@@ -66,49 +62,62 @@
 <body>
 
   <div class="card">
-    <img id="avatar" class="avatar" src="" alt="Avatar GitHub" style="display:none;">
-    <h1 id="username-display">@canaillouescargotier</h1>
+    <!-- Logo YouTube -->
+    <svg class="yt-icon" viewBox="0 0 24 24" fill="#48cae4">
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+    </svg>
+    
+    <h1 id="username-display">@flexplay_officiel</h1>
     <div class="counter" id="follower-count">...</div>
-    <div class="sub-text">Abonnés GitHub</div>
+    <div class="sub-text">Abonnés YouTube</div>
   </div>
 
   <script>
-    const GITHUB_USERNAME = 'canaillouescargotier';
+    const YOUTUBE_HANDLE = 'flexplay_officiel';
     let previousCount = null;
 
-    async function fetchFollowers() {
+    async function fetchYouTubeSubscribers() {
       try {
-        const response = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}`);
-        if (!response.ok) throw new Error('Utilisateur introuvable');
+        // Utilisation d'un service relais public pour récupérer le nombre réel d'abonnés YouTube
+        const response = await fetch(`https://api.mico.icu/youtube/channel/get_subs?handle=${YOUTUBE_HANDLE}`);
         
-        const data = await response.json();
-        const currentCount = data.followers;
-
-        // Mise à jour des informations
-        document.getElementById('username-display').textContent = `@${data.login}`;
-        document.getElementById('follower-count').textContent = currentCount.toLocaleString('fr-FR');
-        
-        if (data.avatar_url) {
-          const avatarImg = document.getElementById('avatar');
-          avatarImg.src = data.avatar_url;
-          avatarImg.style.display = 'inline-block';
-        }
-
-        // Déclenchement des confettis tous les 1000 abonnés
-        if (previousCount !== null) {
-          const previousMilestone = Math.floor(previousCount / 1000);
-          const currentMilestone = Math.floor(currentCount / 1000);
-
-          if (currentMilestone > previousMilestone && currentMilestone > 0) {
-            launchConfetti();
+        if (!response.ok) {
+          // Secours si l'API principale est occupée
+          const fallbackResponse = await fetch(`https://mixerno.space/api/youtube-channel-counter/user/https://www.youtube.com/@${YOUTUBE_HANDLE}`);
+          const fallbackData = await fallbackResponse.json();
+          if (fallbackData && fallbackData.counts && fallbackData.counts[0]) {
+            updateCount(parseInt(fallbackData.counts[0].count));
+            return;
           }
+          throw new Error('Impossible de charger les abonnés');
         }
 
-        previousCount = currentCount;
+        const data = await response.json();
+        if (data && data.subscribers !== undefined) {
+          updateCount(parseInt(data.subscribers));
+        } else {
+          throw new Error('Données invalides');
+        }
+
       } catch (error) {
         console.error('Erreur :', error);
-        document.getElementById('follower-count').textContent = 'Erreur';
       }
+    }
+
+    function updateCount(currentCount) {
+      document.getElementById('follower-count').textContent = currentCount.toLocaleString('fr-FR');
+
+      // Déclenchement des confettis tous les 1000 abonnés
+      if (previousCount !== null && previousCount !== currentCount) {
+        const previousMilestone = Math.floor(previousCount / 1000);
+        const currentMilestone = Math.floor(currentCount / 1000);
+
+        if (currentMilestone > previousMilestone && currentMilestone > 0) {
+          launchConfetti();
+        }
+      }
+
+      previousCount = currentCount;
     }
 
     function launchConfetti() {
@@ -119,9 +128,9 @@
       });
     }
 
-    // Premier chargement puis mise à jour automatique toutes les 10 secondes
-    fetchFollowers();
-    setInterval(fetchFollowers, 10000);
+    // Récupération initiale puis mise à jour automatique toutes les 15 secondes
+    fetchYouTubeSubscribers();
+    setInterval(fetchYouTubeSubscribers, 15000);
   </script>
 </body>
 </html>
