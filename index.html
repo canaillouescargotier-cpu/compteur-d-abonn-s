@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compteur d'abonnés GitHub - @canaillouescargotier</title>
+
+  <!-- Script pour les confettis -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      /* Dégradé de fonds bleus */
+      background: linear-gradient(135deg, #0a1128, #001f54, #034078, #1282a2);
+      color: #ffffff;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      padding: 50px 70px;
+      border-radius: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin-bottom: 15px;
+      border: 3px solid #00b4d8;
+      box-shadow: 0 0 15px rgba(0, 180, 216, 0.5);
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin: 10px 0;
+      color: #caf0f8;
+    }
+
+    .counter {
+      font-size: 5.5rem;
+      font-weight: 800;
+      color: #48cae4; /* Bleu vif */
+      margin: 15px 0;
+      text-shadow: 0 0 25px rgba(72, 202, 228, 0.6);
+    }
+
+    .sub-text {
+      font-size: 1.3rem;
+      color: #90e0ef;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <img id="avatar" class="avatar" src="" alt="Avatar GitHub" style="display:none;">
+    <h1 id="username-display">@canaillouescargotier</h1>
+    <div class="counter" id="follower-count">...</div>
+    <div class="sub-text">Abonnés GitHub</div>
+  </div>
+
+  <script>
+    const GITHUB_USERNAME = 'canaillouescargotier';
+    let previousCount = null;
+
+    async function fetchFollowers() {
+      try {
+        const response = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}`);
+        if (!response.ok) throw new Error('Utilisateur introuvable');
+        
+        const data = await response.json();
+        const currentCount = data.followers;
+
+        // Mise à jour des informations
+        document.getElementById('username-display').textContent = `@${data.login}`;
+        document.getElementById('follower-count').textContent = currentCount.toLocaleString('fr-FR');
+        
+        if (data.avatar_url) {
+          const avatarImg = document.getElementById('avatar');
+          avatarImg.src = data.avatar_url;
+          avatarImg.style.display = 'inline-block';
+        }
+
+        // Déclenchement des confettis tous les 1000 abonnés
+        if (previousCount !== null) {
+          const previousMilestone = Math.floor(previousCount / 1000);
+          const currentMilestone = Math.floor(currentCount / 1000);
+
+          if (currentMilestone > previousMilestone && currentMilestone > 0) {
+            launchConfetti();
+          }
+        }
+
+        previousCount = currentCount;
+      } catch (error) {
+        console.error('Erreur :', error);
+        document.getElementById('follower-count').textContent = 'Erreur';
+      }
+    }
+
+    function launchConfetti() {
+      confetti({
+        particleCount: 200,
+        spread: 120,
+        origin: { y: 0.6 }
+      });
+    }
+
+    // Premier chargement puis mise à jour automatique toutes les 10 secondes
+    fetchFollowers();
+    setInterval(fetchFollowers, 10000);
+  </script>
+</body>
+</html>
