@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Compteur d'abonnés YouTube - @flexplay_officiel</title>
 
-  <!-- Script pour les confettis -->
+  <!-- Library pour les confettis -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -13,7 +13,7 @@
       margin: 0;
       padding: 0;
       font-family: 'Segoe UI', Roboto, sans-serif;
-      /* Dégradé de bleus */
+      /* Superbe fond bleu dégradé */
       background: linear-gradient(135deg, #03045e, #0077b6, #00b4d8);
       color: #ffffff;
       height: 100vh;
@@ -21,11 +21,13 @@
       justify-content: center;
       align-items: center;
       text-align: center;
+      overflow: hidden;
     }
 
     .card {
       background: rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
       padding: 50px 60px;
       border-radius: 28px;
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
@@ -45,11 +47,17 @@
     }
 
     .counter {
-      font-size: 5rem;
+      font-size: 5.5rem;
       font-weight: 900;
       color: #90e0ef;
       margin: 20px 0;
-      text-shadow: 0 0 20px rgba(144, 224, 239, 0.6);
+      text-shadow: 0 0 25px rgba(144, 224, 239, 0.6);
+      transition: transform 0.2s ease;
+      display: inline-block;
+    }
+
+    .counter.bump {
+      transform: scale(1.15);
     }
 
     .sub-text {
@@ -75,7 +83,7 @@
     </svg>
 
     <h1>@flexplay_officiel</h1>
-    <div class="counter" id="subscriber-count">...</div>
+    <div class="counter" id="subscriber-count">0</div>
     <div class="sub-text">Abonnés YouTube</div>
     <div class="status" id="status-text">Chargement...</div>
   </div>
@@ -83,10 +91,41 @@
   <script>
     const CHANNEL_ID = 'UCcDHC9MCUe2-5z_vNUzyXEQ'; 
     let previousCount = null;
+    let displayedCount = 0;
+    let animationInterval = null;
+
+    // Animation fluide pour faire défiler le chiffre
+    function animateCounter(targetValue) {
+      const counterEl = document.getElementById('subscriber-count');
+      
+      if (animationInterval) clearInterval(animationInterval);
+
+      const startValue = displayedCount;
+      const duration = 1200; // Durée de l'animation en millisecondes
+      const frameRate = 30;
+      const totalFrames = Math.round(duration / (1000 / frameRate));
+      let currentFrame = 0;
+
+      animationInterval = setInterval(() => {
+        currentFrame++;
+        const progress = currentFrame / totalFrames;
+        // Effet de ralentissement progressif (ease-out)
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        
+        displayedCount = Math.round(startValue + (targetValue - startValue) * easeProgress);
+        counterEl.textContent = displayedCount.toLocaleString('fr-FR');
+
+        if (currentFrame >= totalFrames) {
+          clearInterval(animationInterval);
+          displayedCount = targetValue;
+          counterEl.textContent = targetValue.toLocaleString('fr-FR');
+        }
+      }, 1000 / frameRate);
+    }
 
     async function fetchSubscribers() {
       const statusElement = document.getElementById('status-text');
-      const countElement = document.getElementById('subscriber-count');
+      const counterEl = document.getElementById('subscriber-count');
 
       try {
         const response = await fetch(`https://mixerno.space/api/youtube-channel-counter/user/${CHANNEL_ID}`);
@@ -97,17 +136,18 @@
         if (data && data.counts && data.counts[0] && data.counts[0].count !== undefined) {
           const currentCount = parseInt(data.counts[0].count);
 
-          countElement.textContent = currentCount.toLocaleString('fr-FR');
           statusElement.textContent = "En direct";
 
-          // Confettis tous les 1 000 abonnés
-          if (previousCount !== null && previousCount !== currentCount) {
-            const prevMilestone = Math.floor(previousCount / 1000);
-            const currentMilestone = Math.floor(currentCount / 1000);
+          // Animation du chiffre
+          animateCounter(currentCount);
 
-            if (currentMilestone > prevMilestone && currentMilestone > 0) {
-              launchConfetti();
-            }
+          // Confettis dès qu'il y a au moins un abonné de plus !
+          if (previousCount !== null && currentCount > previousCount) {
+            launchConfetti();
+            
+            // Effet d'agrandissement temporaire sur le nombre
+            counterEl.classList.add('bump');
+            setTimeout(() => counterEl.classList.remove('bump'), 300);
           }
 
           previousCount = currentCount;
@@ -123,15 +163,15 @@
 
     function launchConfetti() {
       confetti({
-        particleCount: 200,
-        spread: 120,
+        particleCount: 150,
+        spread: 100,
         origin: { y: 0.6 }
       });
     }
 
-    // Premier chargement puis mise à jour toutes les 10 secondes
+    // Premier appel puis actualisation toutes les 5 secondes
     fetchSubscribers();
-    setInterval(fetchSubscribers, 10000);
+    setInterval(fetchSubscribers, 5000);
   </script>
 </body>
 </html>
