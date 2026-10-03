@@ -3,19 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flexplay Live - Application Compteur</title>
+  <title>Flexplay Live</title>
 
-  <!-- Meta PWA -->
-  <meta name="theme-color" content="#03045e">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Flexplay Live">
-  <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/e/ef/Youtube_logo.png">
-
-  <!-- Manifeste PWA -->
-  <link rel="manifest" id="manifest-placeholder">
-
-  <!-- Confettis -->
+  <!-- Script pour les confettis -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -32,12 +22,70 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
+      justify-content: flex-start;
       text-align: center;
-      padding: 20px;
       overflow-x: hidden;
       position: relative;
+    }
+
+    /* BARRE DU HAUT AVEC SÉLECTEUR "AU-DESSUS DES FENÊTRES" */
+    .top-bar {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 10;
+    }
+
+    .app-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #e0f7fa;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pin-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: #90e0ef;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .pin-option:hover {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+    }
+
+    .pin-option input[type="checkbox"] {
+      cursor: pointer;
+      accent-color: #00f5d4;
+      width: 15px;
+      height: 15px;
+    }
+
+    /* CONTENEUR PRINCIPAL */
+    .main-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      width: 100%;
     }
 
     /* BULLES EN FOND */
@@ -76,40 +124,7 @@
       100% { transform: translateY(-110vh) scale(1.3); opacity: 0; }
     }
 
-    /* BANNIÈRE INSTALLATION */
-    .install-banner {
-      position: relative;
-      z-index: 2;
-      background: rgba(0, 245, 212, 0.15);
-      border: 1px solid rgba(0, 245, 212, 0.4);
-      backdrop-filter: blur(10px);
-      padding: 12px 24px;
-      border-radius: 50px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow: 0 0 20px rgba(0, 245, 212, 0.2);
-    }
-
-    .install-btn {
-      background: #00f5d4;
-      color: #02010a;
-      border: none;
-      padding: 8px 18px;
-      border-radius: 30px;
-      font-weight: 800;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .install-btn:hover {
-      transform: scale(1.05);
-      background: #48cae4;
-    }
-
-    /* CARTE PRINCIPALE */
+    /* CARTE DU COMPTEUR */
     .card {
       position: relative;
       z-index: 1;
@@ -224,17 +239,30 @@
       box-shadow: 0 0 12px rgba(0, 245, 212, 0.5);
     }
 
-    .manual-install-hint {
-      margin-top: 15px;
-      font-size: 0.8rem;
-      color: #90e0ef;
-      opacity: 0.8;
+    /* CANVA POUR LE MODE FLOTTANT (PIP) */
+    #pipCanvas {
+      display: none;
     }
   </style>
 </head>
 <body>
 
-  <!-- Bulles de fond -->
+  <!-- BARRE EN HAUT -->
+  <div class="top-bar">
+    <div class="app-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#00f5d4">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+      </svg>
+      Flexplay Live
+    </div>
+
+    <label class="pin-option">
+      <input type="checkbox" id="alwaysOnTopToggle">
+      <span>📌 Placer au-dessus des fenêtres</span>
+    </label>
+  </div>
+
+  <!-- BULLES EN FOND -->
   <div class="bubbles-container">
     <div class="bubble"></div>
     <div class="bubble"></div>
@@ -245,96 +273,46 @@
     <div class="bubble"></div>
   </div>
 
-  <!-- Bannière d'installation -->
-  <div class="install-banner" id="installBanner">
-    <span>📲 Installer l'application <strong>Flexplay Live</strong></span>
-    <button class="install-btn" id="installBtn">Installer</button>
-  </div>
+  <!-- CONTENU PRINCIPAL -->
+  <div class="main-container">
+    <div class="card">
+      <svg class="yt-logo" viewBox="0 0 24 24" fill="#90e0ef">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+      </svg>
 
-  <div class="card">
-    <svg class="yt-logo" viewBox="0 0 24 24" fill="#90e0ef">
-      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-    </svg>
-
-    <h1>@flexplay_officiel</h1>
-    <div class="status">
-      <div class="status-dot"></div>
-      <span>En direct</span>
-    </div>
-
-    <div class="counter" id="subscriber-count">0</div>
-    <div class="sub-text">Abonnés YouTube</div>
-
-    <!-- OBJECTIF DYNAMIQUE -->
-    <div class="goal-section">
-      <div class="goal-header">
-        <span>Objectif : <strong id="next-goal">3 000</strong></span>
-        <span class="goal-percentage" id="goal-percentage">0%</span>
+      <h1>@flexplay_officiel</h1>
+      <div class="status">
+        <div class="status-dot"></div>
+        <span>En direct</span>
       </div>
-      <div class="goal-bar-bg">
-        <div class="goal-bar-fill" id="goal-bar"></div>
+
+      <div class="counter" id="subscriber-count">0</div>
+      <div class="sub-text">Abonnés YouTube</div>
+
+      <!-- OBJECTIF DYNAMIQUE -->
+      <div class="goal-section">
+        <div class="goal-header">
+          <span>Objectif : <strong id="next-goal">3 000</strong></span>
+          <span class="goal-percentage" id="goal-percentage">0%</span>
+        </div>
+        <div class="goal-bar-bg">
+          <div class="goal-bar-fill" id="goal-bar"></div>
+        </div>
       </div>
     </div>
-
-    <div class="manual-install-hint" id="manualHint">
-      Astuce : Tu peux aussi cliquer sur <strong>⋮ (ou le bouton Partager)</strong> puis <strong>"Ajouter à l'écran d'accueil"</strong> pour l'installer.
-    </div>
   </div>
+
+  <!-- ÉLEMENTS MASQUÉS POUR LE RECTANGLE FLOTTANT (PiP) -->
+  <canvas id="pipCanvas" width="400" height="250"></canvas>
+  <video id="pipVideo" autoplay muted style="display:none;"></video>
 
   <script>
-    // --- SERVICE WORKER ---
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch((err) => console.log('SW Erreur:', err));
-    }
-
-    // --- MANIFEST PWA ---
-    const manifestData = {
-      "name": "Flexplay Live",
-      "short_name": "Flexplay",
-      "start_url": "./",
-      "display": "standalone",
-      "background_color": "#02010a",
-      "theme_color": "#03045e",
-      "icons": [
-        {
-          "src": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Youtube_logo.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
-    };
-    const stringManifest = JSON.stringify(manifestData);
-    const blob = new Blob([stringManifest], {type: 'application/json'});
-    const manifestURL = URL.createObjectURL(blob);
-    document.getElementById('manifest-placeholder').setAttribute('href', manifestURL);
-
-    let deferredPrompt;
-    const installBanner = document.getElementById('installBanner');
-    const installBtn = document.getElementById('installBtn');
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBanner.style.display = 'flex';
-    });
-
-    installBtn.addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          installBanner.style.display = 'none';
-        }
-        deferredPrompt = null;
-      }
-    });
-
-    // --- COMPTEUR YOUTUBE ---
     const CHANNEL_ID = 'UCcDHC9MCUe2-5z_vNUzyXEQ'; 
     let previousCount = null;
     let displayedCount = 0;
     let animationInterval = null;
 
+    // --- COMPTEUR YOUTUBE ---
     function animateCounter(targetValue) {
       const counterEl = document.getElementById('subscriber-count');
       if (animationInterval) clearInterval(animationInterval);
@@ -352,11 +330,13 @@
         
         displayedCount = Math.round(startValue + (targetValue - startValue) * easeProgress);
         counterEl.textContent = displayedCount.toLocaleString('fr-FR');
+        updatePipCanvas();
 
         if (currentFrame >= totalFrames) {
           clearInterval(animationInterval);
           displayedCount = targetValue;
           counterEl.textContent = targetValue.toLocaleString('fr-FR');
+          updatePipCanvas();
         }
       }, 1000 / frameRate);
     }
@@ -413,6 +393,55 @@
       });
     }
 
+    // --- MODE "PLACER AU-DESSUS DES FENÊTRES" (Picture-in-Picture) ---
+    const toggle = document.getElementById('alwaysOnTopToggle');
+    const pipCanvas = document.getElementById('pipCanvas');
+    const pipVideo = document.getElementById('pipVideo');
+    const ctx = pipCanvas.getContext('2d');
+
+    function updatePipCanvas() {
+      // Dessine le compteur dans le canvas flottant
+      ctx.fillStyle = '#031936';
+      ctx.fillRect(0, 0, pipCanvas.width, pipCanvas.height);
+
+      ctx.fillStyle = '#90e0ef';
+      ctx.font = 'bold 18px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('@flexplay_officiel', 200, 45);
+
+      ctx.fillStyle = '#00f5d4';
+      ctx.font = 'bold 60px Segoe UI, sans-serif';
+      ctx.fillText(displayedCount.toLocaleString('fr-FR'), 200, 130);
+
+      ctx.fillStyle = '#caf0f8';
+      ctx.font = '14px Segoe UI, sans-serif';
+      ctx.fillText('ABONNÉS YOUTUBE', 200, 175);
+    }
+
+    toggle.addEventListener('change', async () => {
+      if (toggle.checked) {
+        try {
+          updatePipCanvas();
+          const stream = pipCanvas.captureStream();
+          pipVideo.srcObject = stream;
+          await pipVideo.play();
+          await pipVideo.requestPictureInPicture();
+        } catch (err) {
+          console.error("Erreur mode toujours au-dessus :", err);
+          toggle.checked = false;
+        }
+      } else {
+        if (document.pictureInPictureElement) {
+          await document.exitPictureInPicture();
+        }
+      }
+    });
+
+    pipVideo.addEventListener('leavepictureinpicture', () => {
+      toggle.checked = false;
+    });
+
+    // Lancement
     fetchSubscribers();
     setInterval(fetchSubscribers, 5000);
   </script>
