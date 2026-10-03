@@ -29,7 +29,7 @@
       position: relative;
     }
 
-    /* BARRE DU HAUT AVEC SÉLECTEUR "AU-DESSUS DES FENÊTRES" */
+    /* BARRE DU HAUT */
     .top-bar {
       width: 100%;
       background: rgba(0, 0, 0, 0.4);
@@ -63,19 +63,11 @@
       font-size: 0.85rem;
       color: #90e0ef;
       user-select: none;
-      transition: all 0.2s ease;
-    }
-
-    .pin-option:hover {
-      background: rgba(255, 255, 255, 0.18);
-      color: #ffffff;
     }
 
     .pin-option input[type="checkbox"] {
       cursor: pointer;
       accent-color: #00f5d4;
-      width: 15px;
-      height: 15px;
     }
 
     /* CONTENEUR PRINCIPAL */
@@ -131,12 +123,21 @@
       background: rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      padding: 40px 45px;
+      padding: 30px 40px 40px;
       border-radius: 32px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
       border: 1px solid rgba(255, 255, 255, 0.2);
       max-width: 460px;
       width: 100%;
+    }
+
+    /* IFRAME STREAMLABS EN DIRECT */
+    .streamlabs-frame {
+      width: 100%;
+      height: 120px;
+      border: none;
+      margin-bottom: 5px;
+      pointer-events: none;
     }
 
     .yt-logo {
@@ -239,10 +240,7 @@
       box-shadow: 0 0 12px rgba(0, 245, 212, 0.5);
     }
 
-    /* CANVA POUR LE MODE FLOTTANT (PIP) */
-    #pipCanvas {
-      display: none;
-    }
+    canvas#pipCanvas { display: none; }
   </style>
 </head>
 <body>
@@ -276,6 +274,10 @@
   <!-- CONTENU PRINCIPAL -->
   <div class="main-container">
     <div class="card">
+      
+      <!-- Streamlabs Widget d'Alertes -->
+      <iframe class="streamlabs-frame" id="streamlabsAlerts" src="https://streamlabs.com/alert-box/v3/FBFB5F3458E22EEC13FF3DC5F12FEE300398A7D102D20EC378F387D62B2C4FCB9B3496DC69BDB1326ECA0748656D1F497D13D396061FB1741B4850A6F56EE5CBD6E2BA58CAABFD5091A9C2DD05D90C7FBFFD46921E6640D6F1BBA2A92FCC440BC01F424536848E5FBA342932BFBA269FD25557AD00203F5FDBDB2B6AF9"></iframe>
+
       <svg class="yt-logo" viewBox="0 0 24 24" fill="#90e0ef">
         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
       </svg>
@@ -302,7 +304,6 @@
     </div>
   </div>
 
-  <!-- ÉLEMENTS MASQUÉS POUR LE RECTANGLE FLOTTANT (PiP) -->
   <canvas id="pipCanvas" width="400" height="250"></canvas>
   <video id="pipVideo" autoplay muted style="display:none;"></video>
 
@@ -312,7 +313,6 @@
     let displayedCount = 0;
     let animationInterval = null;
 
-    // --- COMPTEUR YOUTUBE ---
     function animateCounter(targetValue) {
       const counterEl = document.getElementById('subscriber-count');
       if (animationInterval) clearInterval(animationInterval);
@@ -393,14 +393,13 @@
       });
     }
 
-    // --- MODE "PLACER AU-DESSUS DES FENÊTRES" (Picture-in-Picture) ---
+    // --- MODE TOUJOURS AU-DESSUS ---
     const toggle = document.getElementById('alwaysOnTopToggle');
     const pipCanvas = document.getElementById('pipCanvas');
     const pipVideo = document.getElementById('pipVideo');
     const ctx = pipCanvas.getContext('2d');
 
     function updatePipCanvas() {
-      // Dessine le compteur dans le canvas flottant
       ctx.fillStyle = '#031936';
       ctx.fillRect(0, 0, pipCanvas.width, pipCanvas.height);
 
@@ -427,7 +426,7 @@
           await pipVideo.play();
           await pipVideo.requestPictureInPicture();
         } catch (err) {
-          console.error("Erreur mode toujours au-dessus :", err);
+          console.error("Erreur PiP :", err);
           toggle.checked = false;
         }
       } else {
@@ -441,7 +440,6 @@
       toggle.checked = false;
     });
 
-    // Lancement
     fetchSubscribers();
     setInterval(fetchSubscribers, 5000);
   </script>
