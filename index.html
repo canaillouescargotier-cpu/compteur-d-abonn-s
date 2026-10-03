@@ -17,8 +17,7 @@
 
     body {
       font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      /* Super dégradé de fonds bleus */
-      background: linear-gradient(135deg, #03045e, #0077b6, #00b4d8);
+      background: linear-gradient(135deg, #02010a, #041230, #032b53, #005f73);
       color: #ffffff;
       height: 100vh;
       display: flex;
@@ -26,69 +25,141 @@
       align-items: center;
       text-align: center;
       padding: 20px;
+      overflow: hidden;
+      perspective: 1000px; /* Pour l'effet 3D */
     }
 
-    .card {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      padding: 50px 60px;
-      border-radius: 28px;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      max-width: 450px;
+    /* Bulles de lumière flottantes en arrière-plan */
+    .bg-orbs {
+      position: absolute;
       width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
     }
 
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.4;
+      animation: float 10s infinite ease-in-out alternate;
+    }
+
+    .orb-1 {
+      width: 300px;
+      height: 300px;
+      background: #00b4d8;
+      top: 10%;
+      left: 15%;
+    }
+
+    .orb-2 {
+      width: 400px;
+      height: 400px;
+      background: #0077b6;
+      bottom: 10%;
+      right: 15%;
+      animation-delay: -5s;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0) scale(1); }
+      100% { transform: translateY(-40px) scale(1.1); }
+    }
+
+    /* Carte principale avec effet 3D Tilt et vitre dépolie */
+    .card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 45px 50px;
+      border-radius: 32px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      max-width: 460px;
+      width: 100%;
+      transition: transform 0.1s ease-out;
+      transform-style: preserve-3d;
+    }
+
+    /* Icône YouTube avec effet de brillance */
     .yt-logo {
-      width: 70px;
-      height: 70px;
+      width: 75px;
+      height: 75px;
       margin-bottom: 10px;
+      filter: drop-shadow(0 0 15px rgba(144, 224, 239, 0.6));
+      animation: pulse-glow 3s infinite alternate;
+    }
+
+    @keyframes pulse-glow {
+      0% { filter: drop-shadow(0 0 10px rgba(144, 224, 239, 0.4)); }
+      100% { filter: drop-shadow(0 0 25px rgba(72, 202, 228, 0.9)); }
     }
 
     h1 {
       font-size: 2.2rem;
       margin: 5px 0;
       color: #e0f7fa;
-      font-weight: 700;
+      font-weight: 800;
+      letter-spacing: 0.5px;
     }
 
     .status {
-      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
       color: #90e0ef;
-      opacity: 0.9;
+      background: rgba(0, 180, 216, 0.15);
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(144, 224, 239, 0.3);
       margin-bottom: 15px;
     }
 
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #00f5d4;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #00f5d4;
+    }
+
     .counter {
-      font-size: 5.5rem;
+      font-size: 5.8rem;
       font-weight: 900;
       color: #90e0ef;
-      margin: 15px 0;
-      text-shadow: 0 0 25px rgba(144, 224, 239, 0.6);
+      margin: 10px 0;
+      text-shadow: 0 0 30px rgba(144, 224, 239, 0.7);
       transition: transform 0.2s ease;
       display: inline-block;
       line-height: 1;
     }
 
     .counter.bump {
-      transform: scale(1.15);
+      transform: scale(1.2);
     }
 
     .sub-text {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       color: #caf0f8;
       text-transform: uppercase;
       letter-spacing: 2px;
       margin-bottom: 25px;
     }
 
-    /* Section Objectif */
+    /* Barre d'objectif */
     .goal-section {
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(0, 0, 0, 0.25);
       padding: 18px 20px;
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
       text-align: left;
     }
 
@@ -99,11 +170,11 @@
       font-size: 0.95rem;
       color: #caf0f8;
       font-weight: 600;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .goal-percentage {
-      color: #48cae4;
+      color: #00f5d4;
       font-weight: 800;
       font-size: 1.1rem;
     }
@@ -117,23 +188,52 @@
     }
 
     .goal-bar-fill {
-      background: linear-gradient(90deg, #48cae4, #00b4d8);
+      background: linear-gradient(90deg, #00b4d8, #00f5d4);
       height: 100%;
       width: 0%;
-      transition: width 0.5s ease;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
       border-radius: 10px;
+      box-shadow: 0 0 12px rgba(0, 245, 212, 0.5);
+    }
+
+    /* Bouton interactif pour tester les confettis */
+    .test-btn {
+      margin-top: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #caf0f8;
+      padding: 8px 18px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .test-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+      color: #ffffff;
     }
   </style>
 </head>
 <body>
 
-  <div class="card">
+  <!-- Éléments de fond -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <div class="card" id="card">
     <svg class="yt-logo" viewBox="0 0 24 24" fill="#90e0ef">
       <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
     </svg>
 
     <h1>@flexplay_officiel</h1>
-    <div class="status" id="status-text">● En direct</div>
+    <div class="status">
+      <div class="status-dot"></div>
+      <span>En direct</span>
+    </div>
 
     <div class="counter" id="subscriber-count">0</div>
     <div class="sub-text">Abonnés YouTube</div>
@@ -148,6 +248,8 @@
         <div class="goal-bar-fill" id="goal-bar"></div>
       </div>
     </div>
+
+    <button class="test-btn" onclick="launchConfetti()">🎉 Tester les confettis</button>
   </div>
 
   <script>
@@ -157,7 +259,20 @@
     let displayedCount = 0;
     let animationInterval = null;
 
-    // Animation fluide des chiffres
+    // Effet 3D Tilt suivant la souris
+    const card = document.getElementById('card');
+    document.addEventListener('mousemove', (e) => {
+      const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+      const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+      card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+    });
+
+    // Reset de l'inclinaison quand la souris quitte l'écran
+    document.addEventListener('mouseleave', () => {
+      card.style.transform = `rotateY(0deg) rotateX(0deg)`;
+    });
+
+    // Animation fluide du compteur
     function animateCounter(targetValue) {
       const counterEl = document.getElementById('subscriber-count');
       if (animationInterval) clearInterval(animationInterval);
@@ -184,9 +299,8 @@
       }, 1000 / frameRate);
     }
 
-    // Calcul dynamique du palier d'objectif (3000, 4000, 5000...)
+    // Calcul de l'objectif (3000, 4000, 5000...)
     function updateGoal(count) {
-      // Détermine le prochain palier de 1000, avec un minimum à 3000
       let nextMilestone = Math.ceil((count + 1) / 1000) * 1000;
       if (nextMilestone < 3000) {
         nextMilestone = 3000;
@@ -194,7 +308,6 @@
 
       const previousMilestone = nextMilestone - 1000;
       
-      // Calcul du pourcentage entre le dernier palier et le prochain
       let progress = ((count - previousMilestone) / (nextMilestone - previousMilestone)) * 100;
       if (progress < 0) progress = (count / nextMilestone) * 100;
 
@@ -219,7 +332,7 @@
           animateCounter(currentCount);
           updateGoal(currentCount);
 
-          // Confettis dès qu'un abonné rejoint la chaîne
+          // Confettis à chaque abonné gagné
           if (previousCount !== null && currentCount > previousCount) {
             launchConfetti();
             counterEl.classList.add('bump');
@@ -235,13 +348,13 @@
 
     function launchConfetti() {
       confetti({
-        particleCount: 150,
+        particleCount: 180,
         spread: 100,
         origin: { y: 0.6 }
       });
     }
 
-    // Premier chargement puis actualisation toutes les 5 secondes
+    // Premier chargement puis mise à jour toutes les 5 secondes
     fetchSubscribers();
     setInterval(fetchSubscribers, 5000);
   </script>
