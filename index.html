@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Analytics & Compteur YouTube - @flexplay_officiel</title>
+  <title>Live Analytics Pro - @flexplay_officiel</title>
 
-  <!-- Script pour les confettis -->
+  <!-- Librairie Confettis -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Librairie Chart.js pour les graphiques -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     * {
@@ -17,7 +19,6 @@
 
     body {
       font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      /* Dégradé bleu */
       background: linear-gradient(135deg, #03045e, #0077b6, #00b4d8);
       color: #ffffff;
       min-height: 100vh;
@@ -25,7 +26,6 @@
       justify-content: center;
       align-items: center;
       padding: 20px;
-      overflow-x: hidden;
     }
 
     .dashboard {
@@ -33,56 +33,57 @@
       grid-template-columns: 1fr 1.2fr 1fr;
       gap: 20px;
       width: 100%;
-      max-width: 1200px;
-      align-items: center;
+      max-width: 1300px;
+      align-items: stretch;
     }
 
-    /* Carte de style néo-morphism/verre */
     .card {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      padding: 30px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 25px;
       border-radius: 24px;
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
       text-align: center;
     }
 
-    /* Carte principale au centre */
     .card.main {
-      padding: 40px 30px;
-      transform: scale(1.03);
+      padding: 35px 25px;
+      transform: scale(1.02);
       border: 2px solid rgba(144, 224, 239, 0.4);
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      color: #e0f7fa;
+      margin-bottom: 5px;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #caf0f8;
+      margin-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: 8px;
     }
 
     .yt-logo {
       width: 60px;
       height: 60px;
-      margin-bottom: 10px;
-    }
-
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 10px;
-      color: #e0f7fa;
-    }
-
-    h2 {
-      font-size: 1.2rem;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: #caf0f8;
-      margin-bottom: 20px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-      padding-bottom: 10px;
+      margin: 0 auto 10px;
     }
 
     .counter {
       font-size: 4.8rem;
       font-weight: 900;
       color: #90e0ef;
-      margin: 15px 0;
+      margin: 10px 0;
       text-shadow: 0 0 25px rgba(144, 224, 239, 0.6);
       transition: transform 0.2s ease;
       display: inline-block;
@@ -93,44 +94,63 @@
     }
 
     .metric-box {
-      background: rgba(0, 0, 0, 0.2);
-      padding: 15px;
-      border-radius: 16px;
-      margin-bottom: 15px;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 12px;
+      border-radius: 14px;
+      margin-bottom: 12px;
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    .metric-box:last-child {
-      margin-bottom: 0;
-    }
-
     .metric-value {
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       font-weight: 800;
       color: #48cae4;
-      margin-top: 5px;
+      margin-top: 2px;
     }
 
     .metric-label {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: #caf0f8;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
 
+    /* Barre d'objectif */
+    .goal-container {
+      margin-top: 15px;
+      text-align: left;
+    }
+
+    .goal-bar-bg {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      height: 12px;
+      width: 100%;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+
+    .goal-bar-fill {
+      background: linear-gradient(90deg, #48cae4, #00b4d8);
+      height: 100%;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    /* Badge Live */
     .live-badge {
       display: inline-block;
       background: #e63946;
       color: #fff;
       font-size: 0.75rem;
       font-weight: bold;
-      padding: 4px 10px;
+      padding: 4px 12px;
       border-radius: 12px;
       margin-bottom: 10px;
       text-transform: uppercase;
       letter-spacing: 1px;
-      box-shadow: 0 0 10px rgba(230, 57, 70, 0.6);
       animation: pulse 2s infinite;
+      box-shadow: 0 0 10px rgba(230, 57, 70, 0.6);
     }
 
     @keyframes pulse {
@@ -139,27 +159,20 @@
       100% { opacity: 1; }
     }
 
-    .live-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #ffffff;
-      margin-bottom: 15px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      min-height: 2.8em;
+    .chart-box {
+      position: relative;
+      height: 150px;
+      width: 100%;
+      margin-top: 10px;
     }
 
     .status {
       font-size: 0.85rem;
-      margin-top: 15px;
       color: #90e0ef;
-      opacity: 0.8;
+      opacity: 0.9;
     }
 
-    /* Adaptation pour les écrans mobiles */
-    @media (max-width: 900px) {
+    @media (max-width: 950px) {
       .dashboard {
         grid-template-columns: 1fr;
       }
@@ -174,10 +187,10 @@
 
   <div class="dashboard">
 
-    <!-- CÔTÉ GAUCHE : ANALYTICS GLOBAUX -->
+    <!-- CÔTÉ GAUCHE : ANALYTICS HISTORIQUE -->
     <div class="card">
       <h2>Analytics Chaîne</h2>
-      
+
       <div class="metric-box">
         <div class="metric-label">Vues Totales</div>
         <div class="metric-value" id="total-views">...</div>
@@ -188,44 +201,59 @@
         <div class="metric-value" id="total-videos">...</div>
       </div>
 
-      <div class="metric-box">
-        <div class="metric-label">Estimation Vues/Jour</div>
-        <div class="metric-value" id="daily-views">...</div>
+      <div class="metric-label" style="margin-top: 5px;">Graphique de Croissance</div>
+      <div class="chart-box">
+        <canvas id="growthChart"></canvas>
       </div>
     </div>
 
-    <!-- CENTRE : COMPTEUR PRINCIPAL EN DIRECT -->
+    <!-- CENTRE : COMPTEUR EN DIRECT -->
     <div class="card main">
-      <svg class="yt-logo" viewBox="0 0 24 24" fill="#90e0ef">
-        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-      </svg>
+      <div>
+        <svg class="yt-logo" viewBox="0 0 24 24" fill="#90e0ef">
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+        <h1>@flexplay_officiel</h1>
+        <div class="status" id="status-text">● En direct</div>
+      </div>
 
-      <h1>@flexplay_officiel</h1>
-      <div class="counter" id="subscriber-count">0</div>
-      <div class="metric-label">Abonnés YouTube</div>
-      <div class="status" id="status-text">Mise à jour en direct...</div>
+      <div>
+        <div class="counter" id="subscriber-count">0</div>
+        <div class="metric-label">Abonnés YouTube</div>
+      </div>
+
+      <!-- Objectif Palier -->
+      <div class="goal-container">
+        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#caf0f8;">
+          <span>Objectif : <strong id="next-goal">1 000</strong></span>
+          <span id="goal-percentage">0%</span>
+        </div>
+        <div class="goal-bar-bg">
+          <div class="goal-bar-fill" id="goal-bar"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- CÔTÉ DROIT : LIVE & DERNIÈRE VIDÉO -->
+    <!-- CÔTÉ DROIT : LIVE ANALYTICS -->
     <div class="card">
-      <h2>Live / Dernier Contenu</h2>
-      
-      <div class="live-badge" id="live-status-tag">Dernier Live / Vidéo</div>
-      <div class="live-title" id="live-video-title">Chargement des données...</div>
-
-      <div class="metric-box">
-        <div class="metric-label">Vues du contenu</div>
-        <div class="metric-value" id="live-views">...</div>
+      <div>
+        <h2>Live Analytics</h2>
+        <div class="live-badge">Session En Direct</div>
       </div>
 
       <div class="metric-box">
-        <div class="metric-label">Likes</div>
-        <div class="metric-value" id="live-likes">...</div>
+        <div class="metric-label">Gagnés cette session</div>
+        <div class="metric-value" id="session-gained">+0</div>
       </div>
 
       <div class="metric-box">
-        <div class="metric-label">Commentaires</div>
-        <div class="metric-value" id="live-comments">...</div>
+        <div class="metric-label">Vitesse de croissance</div>
+        <div class="metric-value" id="growth-rate">0 / heure</div>
+      </div>
+
+      <div class="metric-label">Activité du Live</div>
+      <div class="chart-box">
+        <canvas id="liveChart"></canvas>
       </div>
     </div>
 
@@ -233,17 +261,54 @@
 
   <script>
     const CHANNEL_ID = 'UCcDHC9MCUe2-5z_vNUzyXEQ'; 
+    
     let previousCount = null;
+    let initialSessionCount = null;
     let displayedCount = 0;
     let animationInterval = null;
+    let startTime = Date.now();
 
-    // Animation fluide pour le compteur principal
+    // Setup des Graphiques Chart.js
+    const chartConfig = {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          data: [],
+          borderColor: '#48cae4',
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: true,
+          backgroundColor: 'rgba(72, 202, 228, 0.1)',
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { display: false },
+          y: { display: false }
+        }
+      }
+    };
+
+    const growthChart = new Chart(document.getElementById('growthChart').getContext('2d'), JSON.parse(JSON.stringify(chartConfig)));
+    
+    // Graphique Live avec couleur rouge/rose
+    const liveConfig = JSON.parse(JSON.stringify(chartConfig));
+    liveConfig.data.datasets[0].borderColor = '#ff4d6d';
+    liveConfig.data.datasets[0].backgroundColor = 'rgba(255, 77, 109, 0.15)';
+    const liveChart = new Chart(document.getElementById('liveChart').getContext('2d'), liveConfig);
+
+    // Animation fluide des chiffres
     function animateCounter(targetValue) {
       const counterEl = document.getElementById('subscriber-count');
       if (animationInterval) clearInterval(animationInterval);
 
       const startValue = displayedCount;
-      const duration = 1200;
+      const duration = 1000;
       const frameRate = 30;
       const totalFrames = Math.round(duration / (1000 / frameRate));
       let currentFrame = 0;
@@ -264,9 +329,37 @@
       }, 1000 / frameRate);
     }
 
-    // Récupération des données en direct (Abonnés + Stats globales)
-    async function fetchChannelData() {
-      const statusElement = document.getElementById('status-text');
+    // Mise à jour de la barre d'objectif
+    function updateGoal(count) {
+      // Calcule le prochain palier (ex: 1000, 2000, etc.)
+      const nextMilestone = Math.ceil((count + 1) / 1000) * 1000;
+      const previousMilestone = nextMilestone - 1000;
+      
+      const progress = ((count - previousMilestone) / (nextMilestone - previousMilestone)) * 100;
+      
+      document.getElementById('next-goal').textContent = nextMilestone.toLocaleString('fr-FR');
+      document.getElementById('goal-percentage').textContent = `${Math.round(progress)}%`;
+      document.getElementById('goal-bar').style.width = `${Math.min(100, Math.max(0, progress))}%`;
+    }
+
+    // Mise à jour des Analytics de la session Live
+    function updateLiveAnalytics(currentCount) {
+      if (initialSessionCount === null) {
+        initialSessionCount = currentCount;
+      }
+
+      // Gain pendant la session
+      const gained = currentCount - initialSessionCount;
+      document.getElementById('session-gained').textContent = (gained >= 0 ? '+' : '') + gained.toLocaleString('fr-FR');
+
+      // Vitesse par heure
+      const hoursPassed = (Date.now() - startTime) / (1000 * 60 * 60);
+      const rate = hoursPassed > 0 ? Math.round(gained / hoursPassed) : 0;
+      document.getElementById('growth-rate').textContent = `${rate >= 0 ? '+' : ''}${rate} / h`;
+    }
+
+    // Fonction principale de récupération des données
+    async function fetchAllAnalytics() {
       const counterEl = document.getElementById('subscriber-count');
 
       try {
@@ -276,56 +369,50 @@
         const data = await response.json();
         
         if (data && data.counts) {
-          // 1. Abonnés en direct
           const currentCount = parseInt(data.counts[0].count);
-          statusElement.textContent = "● En direct";
-          animateCounter(currentCount);
 
-          // Confettis à chaque abonné gagné
+          // 1. Mise à jour compteur principal
+          animateCounter(currentCount);
+          updateGoal(currentCount);
+          updateLiveAnalytics(currentCount);
+
+          // 2. Confettis si nouvel abonné
           if (previousCount !== null && currentCount > previousCount) {
             launchConfetti();
             counterEl.classList.add('bump');
             setTimeout(() => counterEl.classList.remove('bump'), 300);
           }
-          previousCount = currentCount;
 
-          // 2. Stats globales
+          // 3. Graphiques en direct
+          const timeLabel = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+          // Ajouter point dans Graphique Chaîne
+          growthChart.data.labels.push(timeLabel);
+          growthChart.data.datasets[0].data.push(currentCount);
+          if (growthChart.data.labels.length > 15) {
+            growthChart.data.labels.shift();
+            growthChart.data.datasets[0].data.shift();
+          }
+          growthChart.update();
+
+          // Ajouter point dans Graphique Live
+          liveChart.data.labels.push(timeLabel);
+          liveChart.data.datasets[0].data.push(currentCount - initialSessionCount);
+          if (liveChart.data.labels.length > 15) {
+            liveChart.data.labels.shift();
+            liveChart.data.datasets[0].data.shift();
+          }
+          liveChart.update();
+
+          // 4. Stats globales
           if (data.counts[1]) document.getElementById('total-views').textContent = parseInt(data.counts[1].count).toLocaleString('fr-FR');
           if (data.counts[2]) document.getElementById('total-videos').textContent = parseInt(data.counts[2].count).toLocaleString('fr-FR');
-          
-          // Estimation de vues quotidiennes moyenne
-          if (data.counts[1]) {
-            const estimatedDaily = Math.round(parseInt(data.counts[1].count) / 365);
-            document.getElementById('daily-views').textContent = `~${estimatedDaily.toLocaleString('fr-FR')}`;
-          }
 
+          previousCount = currentCount;
         }
-      } catch (err) {
-        console.error("Erreur stats chaîne :", err);
-        statusElement.textContent = "Recherche en cours...";
-      }
-    }
 
-    // Récupération des stats du dernier contenu/live
-    async function fetchLiveAnalytics() {
-      try {
-        const response = await fetch(`https://socialcounts.org/api/youtube-live-subscriber-count/search/UCcDHC9MCUe2-5z_vNUzyXEQ`);
-        const data = await response.json();
-
-        if (data && data.counters) {
-          document.getElementById('live-video-title').textContent = "@flexplay_officiel - Flux Actif";
-          document.getElementById('live-views').textContent = (data.counters[1] ? data.counters[1].value : 0).toLocaleString('fr-FR');
-          document.getElementById('live-likes').textContent = (data.counters[2] ? data.counters[2].value : 0).toLocaleString('fr-FR');
-          document.getElementById('live-comments').textContent = (data.counters[3] ? data.counters[3].value : 0).toLocaleString('fr-FR');
-        } else {
-          document.getElementById('live-video-title').textContent = "Chaîne en ligne";
-          document.getElementById('live-views').textContent = "En attente";
-          document.getElementById('live-likes').textContent = "En attente";
-          document.getElementById('live-comments').textContent = "En attente";
-        }
       } catch (err) {
-        console.error("Erreur analytics live :", err);
-        document.getElementById('live-video-title').textContent = "Dernière session active";
+        console.error("Erreur Analytics :", err);
       }
     }
 
@@ -337,13 +424,9 @@
       });
     }
 
-    // Lancement des mises à jour
-    fetchChannelData();
-    fetchLiveAnalytics();
-
-    // Actualisation automatique toutes les 5 secondes
-    setInterval(fetchChannelData, 5000);
-    setInterval(fetchLiveAnalytics, 10000);
+    // Premier appel puis rafraîchissement toutes les 5 secondes
+    fetchAllAnalytics();
+    setInterval(fetchAllAnalytics, 5000);
   </script>
 </body>
 </html>
