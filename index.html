@@ -45,18 +45,11 @@
             z-index: 10;
         }
 
-        .channel-header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-
         .channel-name {
             font-size: 16px;
             font-weight: 600;
             color: #ffffff;
+            margin-bottom: 8px;
         }
 
         /* Badge En direct */
@@ -127,7 +120,7 @@
         .progress-bar-fill {
             background: linear-gradient(90deg, #00c6ff, #0072ff);
             height: 100%;
-            width: 14%;
+            width: 0%;
             border-radius: 6px;
             transition: width 0.5s ease;
         }
@@ -149,13 +142,13 @@
             </span>
         </div>
 
-        <div class="subscriber-count" id="subCount">2 144</div>
+        <div class="subscriber-count" id="subCount">...</div>
         <div class="label">Abonnés YouTube</div>
         
         <div class="goal-container">
             <div class="goal-info">
               <span>Objectif : 3 000</span>
-              <span>14%</span>
+              <span id="progressText">0%</span>
             </div>
             <div class="progress-bar-bg">
                 <div class="progress-bar-fill" id="progressBar"></div>
@@ -163,5 +156,36 @@
         </div>
     </div>
 
+    <script>
+        // Mets ton identifiant de chaîne YouTube (qui commence par UC...) ici :
+        const CHANNEL_ID = "TON_ID_UC_ICI"; 
+
+        async function fetchSubscriberCount() {
+            try {
+                // Utilisation d'un service public de suivi en direct via l'ID YouTube
+                const response = await fetch(`https://api.socialcounts.org/youtube-live-subscriber-count/${CHANNEL_ID}`);
+                const data = await response.json();
+                
+                if (data && data.subcounts && data.subcounts.length > 0) {
+                    const count = data.subcounts[data.subcounts.length - 1].count;
+                    
+                    // Mise à jour de l'affichage du compteur avec des espaces pour les milliers
+                    document.getElementById('subCount').innerText = count.toLocaleString('fr-FR');
+                    
+                    // Calcul de la barre de progression par rapport à l'objectif de 3000
+                    const goal = 3000;
+                    let percentage = Math.min(Math.floor((count / goal) * 100), 100);
+                    document.getElementById('progressText').innerText = percentage + '%';
+                    document.getElementById('progressBar').style.width = percentage + '%';
+                }
+            } catch (error) {
+                console.error("Erreur lors de la récupération des abonnés :", error);
+            }
+        }
+
+        // Lancer la récupération tout de suite puis toutes les 5 secondes
+        fetchSubscriberCount();
+        setInterval(fetchSubscriberCount, 5000);
+    </script>
 </body>
 </html>
