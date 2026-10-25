@@ -16,7 +16,7 @@
             overflow: hidden;
         }
 
-        /* Bulles lumineuses animées en arrière-plan */
+        /* Bulles lumineuses d'arrière-plan */
         .bubble {
             position: absolute;
             background: rgba(0, 210, 255, 0.15);
@@ -41,7 +41,7 @@
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             text-align: center;
-            width: 300px;
+            width: 280px;
             z-index: 10;
         }
 
@@ -89,7 +89,7 @@
             text-transform: uppercase;
             letter-spacing: 1.5px;
             color: #8a99ad;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         /* Barre d'objectif */
@@ -98,7 +98,6 @@
             padding: 10px 12px;
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.05);
-            margin-bottom: 15px;
         }
 
         .goal-info {
@@ -125,33 +124,11 @@
             border-radius: 6px;
             transition: width 0.5s ease;
         }
-
-        /* Zone de chat en direct */
-        .chat-box {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            padding: 8px;
-            max-height: 90px;
-            overflow-y: auto;
-            text-align: left;
-            font-size: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .chat-message {
-            margin-bottom: 4px;
-            word-break: break-word;
-        }
-
-        .chat-user {
-            font-weight: bold;
-            color: #00c6ff;
-        }
     </style>
 </head>
 <body>
 
-    <!-- Bulles décoratives animées en arrière-plan -->
+    <!-- Bulles décoratives en arrière-plan -->
     <div class="bubble" style="width: 50px; height: 50px; top: 20%; left: 25%; animation-delay: 0s;"></div>
     <div class="bubble" style="width: 35px; height: 35px; bottom: 25%; right: 28%; animation-delay: 2s;"></div>
     <div class="bubble" style="width: 70px; height: 70px; top: 65%; left: 15%; animation-delay: 4s;"></div>
@@ -177,18 +154,11 @@
                 <div class="progress-bar-fill" id="progressBar"></div>
             </div>
         </div>
-
-        <!-- Mini chat en direct -->
-        <div class="chat-box" id="chatBox">
-            <div class="chat-message"><span class="chat-user">Système :</span> Prêt pour le live...</div>
-        </div>
     </div>
 
     <script>
-        // === TES INFORMATIONS ENREGISTRÉES ===
-        const CHANNEL_ID = "TON_ID_UC_ICI"; // Remets ton ID UC... ici
-        const API_KEY = "TA_CLE_API_ICI";       // Ta clé API Google Cloud est enregistrée ici
-        // =====================================
+        // Ton identifiant de chaîne YouTube
+        const CHANNEL_ID = "UCcDHC9MCUe2-5z_vNUzyXEQ"; 
 
         async function fetchSubscriberCount() {
             try {
@@ -197,19 +167,22 @@
                 
                 if (data && data.subcounts && data.subcounts.length > 0) {
                     const count = data.subcounts[data.subcounts.length - 1].count;
+                    
+                    // Affiche le nombre d'abonnés en direct
                     document.getElementById('subCount').innerText = count.toLocaleString('fr-FR');
                     
+                    // Calcule la progression vers 3000 abonnés
                     const goal = 3000;
                     let percentage = Math.min(Math.floor((count / goal) * 100), 100);
                     document.getElementById('progressText').innerText = percentage + '%';
                     document.getElementById('progressBar').style.width = percentage + '%';
                 }
             } catch (error) {
-                console.error("Erreur abonnés :", error);
+                console.error("Erreur lors de la récupération des abonnés :", error);
             }
         }
 
-        // Lancer la récupération des abonnés en temps réel
+        // Actualisation automatique toutes les 5 secondes
         fetchSubscriberCount();
         setInterval(fetchSubscriberCount, 5000);
     </script>
