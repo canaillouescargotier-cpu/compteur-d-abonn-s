@@ -1,191 +1,730 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Widget Abonnés YouTube</title>
-    <style>
-        body {
-            margin: 0;
-            background: radial-gradient(circle at center, #0f2027, #203a43, #2c5364);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flexplay Live</title>
 
-        /* Bulles lumineuses d'arrière-plan */
-        .bubble {
-            position: absolute;
-            background: rgba(0, 210, 255, 0.15);
-            border-radius: 50%;
-            pointer-events: none;
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.1);
-            animation: float 6s infinite ease-in-out;
-        }
+  <!-- Confettis & Socket.io pour Streamlabs -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.4.0/socket.io.js"></script>
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
-            50% { transform: translateY(-15px) scale(1.05); opacity: 1; }
-        }
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        /* Carte principale style glassmorphism */
-        .widget-card {
-            background: rgba(18, 30, 49, 0.75);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            padding: 24px 28px;
-            border-radius: 24px;
-            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            text-align: center;
-            width: 280px;
-            z-index: 10;
-        }
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #02010a, #041230, #032b53, #005f73);
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      text-align: center;
+      overflow-x: hidden;
+      position: relative;
+    }
 
-        .channel-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #ffffff;
-            margin-bottom: 8px;
-        }
+    /* BARRE DU HAUT */
+    .top-bar {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 10;
+    }
 
-        /* Badge En direct */
-        .live-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: rgba(0, 200, 100, 0.2);
-            border: 1px solid rgba(0, 200, 100, 0.4);
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 10px;
-            color: #2ecc71;
-            font-weight: bold;
-            margin-bottom: 12px;
-        }
+    .app-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #e0f7fa;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-        .live-dot {
-            width: 6px;
-            height: 6px;
-            background-color: #2ecc71;
-            border-radius: 50%;
-            box-shadow: 0 0 6px #2ecc71;
-        }
+    .pin-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: #90e0ef;
+      user-select: none;
+    }
 
-        .subscriber-count {
-            font-size: 40px;
-            font-weight: 700;
-            margin: 5px 0;
-            color: #ffffff;
-            letter-spacing: -1px;
-        }
+    .pin-option input[type="checkbox"] {
+      cursor: pointer;
+      accent-color: #00f5d4;
+    }
 
-        .label {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #8a99ad;
-            margin-bottom: 20px;
-        }
+    /* CONTENEUR PRINCIPAL */
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      width: 100%;
+      gap: 15px;
+    }
 
-        /* Barre d'objectif */
-        .goal-container {
-            background: rgba(0, 0, 0, 0.25);
-            padding: 10px 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
+    /* BULLES EN FOND */
+    .bubbles-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
 
-        .goal-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            margin-bottom: 6px;
-            color: #94a3b8;
-            font-weight: 500;
-        }
+    .bubble {
+      position: absolute;
+      bottom: -100px;
+      background: rgba(144, 224, 239, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(144, 224, 239, 0.4);
+      animation: rise 12s infinite linear;
+    }
 
-        .progress-bar-bg {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-            height: 8px;
-            width: 100%;
-            overflow: hidden;
-        }
+    .bubble:nth-child(1) { left: 10%; width: 40px; height: 40px; animation-duration: 8s; }
+    .bubble:nth-child(2) { left: 20%; width: 20px; height: 20px; animation-duration: 5s; animation-delay: 1s; }
+    .bubble:nth-child(3) { left: 35%; width: 50px; height: 50px; animation-duration: 10s; animation-delay: 2s; }
+    .bubble:nth-child(4) { left: 50%; width: 30px; height: 30px; animation-duration: 7s; animation-delay: 0s; }
+    .bubble:nth-child(5) { left: 65%; width: 60px; height: 60px; animation-duration: 11s; animation-delay: 3s; }
+    .bubble:nth-child(6) { left: 80%; width: 25px; height: 25px; animation-duration: 6s; animation-delay: 1s; }
+    .bubble:nth-child(7) { left: 90%; width: 45px; height: 45px; animation-duration: 9s; animation-delay: 4s; }
 
-        .progress-bar-fill {
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
-            height: 100%;
-            width: 0%;
-            border-radius: 6px;
-            transition: width 0.5s ease;
-        }
-    </style>
+    @keyframes rise {
+      0% { transform: translateY(0) scale(1); opacity: 0.2; }
+      50% { opacity: 0.7; }
+      100% { transform: translateY(-110vh) scale(1.3); opacity: 0; }
+    }
+
+    /* CARTE DU COMPTEUR */
+    .card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 35px 40px 40px;
+      border-radius: 32px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      max-width: 460px;
+      width: 100%;
+    }
+
+    /* ALERTE PSEUDO */
+    .alert-banner {
+      display: none;
+      background: linear-gradient(90deg, #00f5d4, #00b4d8);
+      color: #02010a;
+      padding: 12px 18px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 1rem;
+      margin-bottom: 20px;
+      box-shadow: 0 0 20px rgba(0, 245, 212, 0.6);
+      animation: alertPop 0.4s ease-out;
+    }
+
+    @keyframes alertPop {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .yt-logo {
+      width: 75px;
+      height: 75px;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 0 15px rgba(144, 224, 239, 0.6));
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin: 5px 0;
+      color: #e0f7fa;
+      font-weight: 800;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: #90e0ef;
+      background: rgba(0, 180, 216, 0.15);
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(144, 224, 239, 0.3);
+      margin-bottom: 15px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #00f5d4;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #00f5d4;
+    }
+
+    .counter {
+      font-size: 5.8rem;
+      font-weight: 900;
+      color: #90e0ef;
+      margin: 10px 0;
+      text-shadow: 0 0 30px rgba(144, 224, 239, 0.7);
+      transition: transform 0.2s ease;
+      display: inline-block;
+      line-height: 1;
+    }
+
+    .counter.bump {
+      transform: scale(1.2);
+    }
+
+    .sub-text {
+      font-size: 1.1rem;
+      color: #caf0f8;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 25px;
+    }
+
+    /* BARRE D'OBJECTIF */
+    .goal-section {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 18px 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      text-align: left;
+    }
+
+    .goal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95rem;
+      color: #caf0f8;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .goal-percentage {
+      color: #00f5d4;
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+
+    .goal-bar-bg {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      height: 14px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .goal-bar-fill {
+      background: linear-gradient(90deg, #00b4d8, #00f5d4);
+      height: 100%;
+      width: 0%;
+      transition: width 0.6s ease;
+      border-radius: 10px;
+      box-shadow: 0 0 12px rgba(0, 245, 212, 0.5);
+    }
+
+    /* BOÎTE CHAT */
+    .chat-card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 20px;
+      border-radius: 24px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      max-width: 460px;
+      width: 100%;
+      text-align: left;
+    }
+
+    .chat-header {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #00f5d4;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-list {
+      max-height: 150px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .chat-item {
+      font-size: 0.85rem;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 8px 12px;
+      border-radius: 12px;
+      word-break: break-word;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .chat-author {
+      font-weight: bold;
+      color: #90e0ef;
+      margin-right: 6px;
+    }
+
+    .chat-config {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .chat-config input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 8px 12px;
+      border-radius: 12px;
+      color: white;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    .chat-config input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .chat-config button {
+      background: #00f5d4;
+      color: #02010a;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: background 0.2s;
+    }
+
+    .chat-config button:hover {
+      background: #00b4d8;
+    }
+
+    canvas#pipCanvas { display: none; }
+  </style>
 </head>
 <body>
 
-    <!-- Bulles décoratives en arrière-plan -->
-    <div class="bubble" style="width: 50px; height: 50px; top: 20%; left: 25%; animation-delay: 0s;"></div>
-    <div class="bubble" style="width: 35px; height: 35px; bottom: 25%; right: 28%; animation-delay: 2s;"></div>
-    <div class="bubble" style="width: 70px; height: 70px; top: 65%; left: 15%; animation-delay: 4s;"></div>
-
-    <div class="widget-card">
-        <div class="channel-name">@flexplay_officiel</div>
-        
-        <div>
-            <span class="live-badge">
-                <span class="live-dot"></span> En direct
-            </span>
-        </div>
-
-        <div class="subscriber-count" id="subCount">...</div>
-        <div class="label">Abonnés YouTube</div>
-        
-        <div class="goal-container">
-            <div class="goal-info">
-              <span>Objectif : 3 000</span>
-              <span id="progressText">0%</span>
-            </div>
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" id="progressBar"></div>
-            </div>
-        </div>
+  <!-- BARRE DU HAUT -->
+  <div class="top-bar">
+    <div class="app-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#00f5d4">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+      </svg>
+      Flexplay Live
     </div>
 
-    <script>
-        // Mets ton identifiant de chaîne YouTube (qui commence par UC...) ici :
-        const CHANNEL_ID = "TON_ID_UC_ICI"; 
+    <label class="pin-option">
+      <input type="checkbox" id="alwaysOnTopToggle">
+      <span>📌 Placer au-dessus des fenêtres</span>
+    </label>
+  </div>
 
-        async function fetchSubscriberCount() {
-            try {
-                // Utilisation d'un service public de suivi en direct via l'ID YouTube
-                const response = await fetch(`https://api.socialcounts.org/youtube-live-subscriber-count/${CHANNEL_ID}`);
-                const data = await response.json();
-                
-                if (data && data.subcounts && data.subcounts.length > 0) {
-                    const count = data.subcounts[data.subcounts.length - 1].count;
-                    
-                    // Mise à jour de l'affichage du compteur avec des espaces pour les milliers
-                    document.getElementById('subCount').innerText = count.toLocaleString('fr-FR');
-                    
-                    // Calcul de la barre de progression par rapport à l'objectif de 3000
-                    const goal = 3000;
-                    let percentage = Math.min(Math.floor((count / goal) * 100), 100);
-                    document.getElementById('progressText').innerText = percentage + '%';
-                    document.getElementById('progressBar').style.width = percentage + '%';
-                }
-            } catch (error) {
-                console.error("Erreur lors de la récupération des abonnés :", error);
-            }
+  <!-- BULLES EN FOND -->
+  <div class="bubbles-container">
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+  </div>
+
+  <!-- CONTENU PRINCIPAL -->
+  <div class="main-container">
+    <div class="card">
+      
+      <!-- BANNIÈRE D'ALERTE PSEUDO -->
+      <div class="alert-banner" id="alertBanner">
+        🎉 Nouveau sub : <span id="alertUsername">---</span> !
+      </div>
+
+      <svg class="yt-logo" viewBox="0 0 24 24" fill="#90e0ef">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+      </svg>
+
+      <h1>@flexplay_officiel</h1>
+      <div class="status">
+        <div class="status-dot"></div>
+        <span>En direct</span>
+      </div>
+
+      <div class="counter" id="subscriber-count">0</div>
+      <div class="sub-text">Abonnés YouTube</div>
+
+      <!-- OBJECTIF DYNAMIQUE -->
+      <div class="goal-section">
+        <div class="goal-header">
+          <span>Objectif : <strong id="next-goal">3 000</strong></span>
+          <span class="goal-percentage" id="goal-percentage">0%</span>
+        </div>
+        <div class="goal-bar-bg">
+          <div class="goal-bar-fill" id="goal-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARTE DE CHAT EN DIRECT -->
+    <div class="chat-card">
+      <div class="chat-header">
+        <span>💬 Chat YouTube en Direct</span>
+        <span id="chat-status" style="font-size:0.75rem; color:#90e0ef;">Connectez l'API</span>
+      </div>
+      <div class="chat-list" id="chat-list">
+        <div class="chat-item" style="color: #90e0ef; text-align: center;">Entrez votre clé YouTube Data API v3 ci-dessous pour activer le chat en direct.</div>
+      </div>
+      <div class="chat-config">
+        <input type="password" id="apiKeyInput" placeholder="Clé API YouTube Data v3">
+        <button id="connectChatBtn">Connecter</button>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="pipCanvas" width="400" height="340"></canvas>
+  <video id="pipVideo" autoplay muted style="display:none;"></video>
+
+  <script>
+    const CHANNEL_ID = 'UCcDHC9MCUe2-5z_vNUzyXEQ'; 
+    const STREAMLABS_SOCKET_TOKEN = 'INSÈRE_TON_SOCKET_TOKEN_STREAMLABS_ICI';
+
+    let previousCount = null;
+    let displayedCount = 0;
+    let animationInterval = null;
+
+    // YouTube Chat state variables
+    let youtubeApiKey = '';
+    let liveChatId = null;
+    let chatPageToken = null;
+    let chatInterval = null;
+    let chatMessages = [];
+
+    // --- STREAMLABS WEBSOCKET EN TEMPS RÉEL ---
+    if (STREAMLABS_SOCKET_TOKEN && STREAMLABS_SOCKET_TOKEN !== 'INSÈRE_TON_SOCKET_TOKEN_STREAMLABS_ICI') {
+      const streamlabs = io(`https://sockets.streamlabs.com?token=${STREAMLABS_SOCKET_TOKEN}`, {transports: ['websocket']});
+
+      streamlabs.on('event', (eventData) => {
+        if (eventData.type === 'follow' || eventData.type === 'subscription') {
+          const message = eventData.message[0];
+          if (message && message.name) {
+            triggerNewSubAlert(message.name);
+          }
+        }
+      });
+    }
+
+    function triggerNewSubAlert(name) {
+      const banner = document.getElementById('alertBanner');
+      const usernameEl = document.getElementById('alertUsername');
+
+      usernameEl.textContent = name;
+      banner.style.display = 'block';
+
+      launchConfetti();
+
+      setTimeout(() => {
+        banner.style.display = 'none';
+      }, 7000);
+    }
+
+    function animateCounter(targetValue) {
+      const counterEl = document.getElementById('subscriber-count');
+      if (animationInterval) clearInterval(animationInterval);
+
+      const startValue = displayedCount;
+      const duration = 1000;
+      const frameRate = 30;
+      const totalFrames = Math.round(duration / (1000 / frameRate));
+      let currentFrame = 0;
+
+      animationInterval = setInterval(() => {
+        currentFrame++;
+        const progress = currentFrame / totalFrames;
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        
+        displayedCount = Math.round(startValue + (targetValue - startValue) * easeProgress);
+        counterEl.textContent = displayedCount.toLocaleString('fr-FR');
+        updatePipCanvas();
+
+        if (currentFrame >= totalFrames) {
+          clearInterval(animationInterval);
+          displayedCount = targetValue;
+          counterEl.textContent = targetValue.toLocaleString('fr-FR');
+          updatePipCanvas();
+        }
+      }, 1000 / frameRate);
+    }
+
+    function updateGoal(count) {
+      let nextMilestone = Math.ceil((count + 1) / 1000) * 1000;
+      if (nextMilestone < 3000) {
+        nextMilestone = 3000;
+      }
+
+      const previousMilestone = nextMilestone - 1000;
+      
+      let progress = ((count - previousMilestone) / (nextMilestone - previousMilestone)) * 100;
+      if (progress < 0) progress = (count / nextMilestone) * 100;
+
+      document.getElementById('next-goal').textContent = nextMilestone.toLocaleString('fr-FR');
+      document.getElementById('goal-percentage').textContent = `${Math.round(progress)}%`;
+      document.getElementById('goal-bar').style.width = `${Math.min(100, Math.max(0, progress))}%`;
+    }
+
+    async function fetchSubscribers() {
+      const counterEl = document.getElementById('subscriber-count');
+
+      try {
+        const response = await fetch(`https://mixerno.space/api/youtube-channel-counter/user/${CHANNEL_ID}`);
+        if (!response.ok) throw new Error("Erreur serveur");
+
+        const data = await response.json();
+        
+        if (data && data.counts && data.counts[0] && data.counts[0].count !== undefined) {
+          const currentCount = parseInt(data.counts[0].count);
+
+          animateCounter(currentCount);
+          updateGoal(currentCount);
+
+          if (previousCount !== null && currentCount > previousCount) {
+            launchConfetti();
+            counterEl.classList.add('bump');
+            setTimeout(() => counterEl.classList.remove('bump'), 300);
+          }
+
+          previousCount = currentCount;
+        }
+      } catch (err) {
+        console.error("Erreur :", err);
+      }
+    }
+
+    function launchConfetti() {
+      confetti({
+        particleCount: 180,
+        spread: 100,
+        origin: { y: 0.6 }
+      });
+    }
+
+    // --- CHAT YOUTUBE EN DIRECT ---
+    document.getElementById('connectChatBtn').addEventListener('click', () => {
+      const key = document.getElementById('apiKeyInput').value.trim();
+      if (key) {
+        youtubeApiKey = key;
+        initYouTubeChat();
+      }
+    });
+
+    async function initYouTubeChat() {
+      const statusEl = document.getElementById('chat-status');
+      statusEl.textContent = "Recherche du live...";
+      try {
+        // 1. Récupérer l'ID du Live stream actif pour la chaîne
+        const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&type=video&eventType=live&key=${youtubeApiKey}`;
+        const searchRes = await fetch(searchUrl);
+        const searchData = await searchRes.json();
+
+        if (!searchData.items || searchData.items.length === 0) {
+          statusEl.textContent = "Aucun live détecté";
+          return;
         }
 
-        // Lancer la récupération tout de suite puis toutes les 5 secondes
-        fetchSubscriberCount();
-        setInterval(fetchSubscriberCount, 5000);
-    </script>
+        const videoId = searchData.items[0].id.videoId;
+
+        // 2. Récupérer l'ID du LiveChat
+        const videoUrl = `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${videoId}&key=${youtubeApiKey}`;
+        const videoRes = await fetch(videoUrl);
+        const videoData = await videoRes.json();
+
+        if (videoData.items && videoData.items[0].liveStreamingDetails) {
+          liveChatId = videoData.items[0].liveStreamingDetails.activeLiveChatId;
+          if (liveChatId) {
+            statusEl.textContent = "● En direct";
+            statusEl.style.color = "#00f5d4";
+            document.getElementById('chat-list').innerHTML = '';
+            fetchChatMessages();
+            if (chatInterval) clearInterval(chatInterval);
+            chatInterval = setInterval(fetchChatMessages, 4000);
+          } else {
+            statusEl.textContent = "Chat désactivé";
+          }
+        } else {
+          statusEl.textContent = "Live non trouvé";
+        }
+      } catch (err) {
+        console.error("Erreur YouTube API Chat:", err);
+        statusEl.textContent = "Erreur connexion";
+      }
+    }
+
+    async function fetchChatMessages() {
+      if (!liveChatId || !youtubeApiKey) return;
+
+      let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&key=${youtubeApiKey}`;
+      if (chatPageToken) {
+        url += `&pageToken=${chatPageToken}`;
+      }
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.nextPageToken) {
+          chatPageToken = data.nextPageToken;
+        }
+
+        if (data.items && data.items.length > 0) {
+          data.items.forEach(item => {
+            const author = item.authorDetails.displayName;
+            const message = item.snippet.displayMessage;
+            addChatMessage(author, message);
+          });
+        }
+      } catch (err) {
+        console.error("Erreur de chargement du chat:", err);
+      }
+    }
+
+    function addChatMessage(author, message) {
+      chatMessages.push({ author, message });
+      if (chatMessages.length > 30) chatMessages.shift();
+
+      const chatList = document.getElementById('chat-list');
+      const item = document.createElement('div');
+      item.className = 'chat-item';
+      item.innerHTML = `<span class="chat-author">${author}:</span> <span>${message}</span>`;
+      chatList.appendChild(item);
+      chatList.scrollTop = chatList.scrollHeight;
+
+      updatePipCanvas();
+    }
+
+    // --- MODE TOUJOURS AU-DESSUS (PiP Canvas) ---
+    const toggle = document.getElementById('alwaysOnTopToggle');
+    const pipCanvas = document.getElementById('pipCanvas');
+    const pipVideo = document.getElementById('pipVideo');
+    const ctx = pipCanvas.getContext('2d');
+
+    function updatePipCanvas() {
+      // Fond principal
+      ctx.fillStyle = '#031936';
+      ctx.fillRect(0, 0, pipCanvas.width, pipCanvas.height);
+
+      // Titre & Abonnés
+      ctx.fillStyle = '#90e0ef';
+      ctx.font = 'bold 16px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('@flexplay_officiel', 200, 35);
+
+      ctx.fillStyle = '#00f5d4';
+      ctx.font = 'bold 52px Segoe UI, sans-serif';
+      ctx.fillText(displayedCount.toLocaleString('fr-FR'), 200, 105);
+
+      ctx.fillStyle = '#caf0f8';
+      ctx.font = '12px Segoe UI, sans-serif';
+      ctx.fillText('ABONNÉS YOUTUBE', 200, 135);
+
+      // Séparateur
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(20, 150);
+      ctx.lineTo(380, 150);
+      ctx.stroke();
+
+      // Section Chat dans le Canvas PiP
+      ctx.fillStyle = '#00f5d4';
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('Chat en direct:', 20, 172);
+
+      const recentMessages = chatMessages.slice(-4);
+      let startY = 195;
+
+      recentMessages.forEach((msg) => {
+        ctx.font = 'bold 12px Segoe UI, sans-serif';
+        ctx.fillStyle = '#90e0ef';
+        const authorText = msg.author + ': ';
+        ctx.fillText(authorText, 20, startY);
+
+        const authorWidth = ctx.measureText(authorText).width;
+        ctx.font = '12px Segoe UI, sans-serif';
+        ctx.fillStyle = '#ffffff';
+
+        // Troncature du message si trop long pour le canvas
+        let text = msg.message;
+        if (text.length > 35) text = text.substring(0, 32) + '...';
+        ctx.fillText(text, 20 + authorWidth, startY);
+
+        startY += 28;
+      });
+    }
+
+    toggle.addEventListener('change', async () => {
+      if (toggle.checked) {
+        try {
+          updatePipCanvas();
+          const stream = pipCanvas.captureStream();
+          pipVideo.srcObject = stream;
+          await pipVideo.play();
+          await pipVideo.requestPictureInPicture();
+        } catch (err) {
+          console.error("Erreur PiP :", err);
+          toggle.checked = false;
+        }
+      } else {
+        if (document.pictureInPictureElement) {
+          await document.exitPictureInPicture();
+        }
+      }
+    });
+
+    pipVideo.addEventListener('leavepictureinpicture', () => {
+      toggle.checked = false;
+    });
+
+    fetchSubscribers();
+    setInterval(fetchSubscribers, 5000);
+  </script>
 </body>
 </html>
