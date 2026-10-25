@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Widget Abonnés & Chat YouTube</title>
+    <title>Widget Abonnés YouTube</title>
     <style>
         body {
             margin: 0;
@@ -16,7 +16,7 @@
             overflow: hidden;
         }
 
-        /* Bulles lumineuses d'arrière-plan */
+        /* Bulles lumineuses animées en arrière-plan */
         .bubble {
             position: absolute;
             background: rgba(0, 210, 255, 0.15);
@@ -151,7 +151,7 @@
 </head>
 <body>
 
-    <!-- Bulles décoratives d'arrière-plan -->
+    <!-- Bulles décoratives animées en arrière-plan -->
     <div class="bubble" style="width: 50px; height: 50px; top: 20%; left: 25%; animation-delay: 0s;"></div>
     <div class="bubble" style="width: 35px; height: 35px; bottom: 25%; right: 28%; animation-delay: 2s;"></div>
     <div class="bubble" style="width: 70px; height: 70px; top: 65%; left: 15%; animation-delay: 4s;"></div>
@@ -185,21 +185,11 @@
     </div>
 
     <script>
-        // === LA MÉMOIRE AUTOMATIQUE (LocalStorage) ===
-        // Si la clé ou l'ID sont déjà enregistrés, il les récupère tout seul. 
-        // Sinon, tu les mets une seule fois ici :
-        let CHANNEL_ID = localStorage.getItem('yt_channel_id') || "TON_ID_UC_ICI";
-        let API_KEY = localStorage.getItem('yt_api_key') || "TA_CLE_API_ICI";
+        // === TES INFORMATIONS ENREGISTRÉES ===
+        const CHANNEL_ID = "TON_ID_UC_ICI"; // Remets ton ID UC... ici
+        const API_KEY = "TA_CLE_API_ICI";       // Ta clé API Google Cloud est enregistrée ici
+        // =====================================
 
-        // Sauvegarde automatique dans le navigateur pour ne plus jamais avoir à les réécrire
-        localStorage.setItem('yt_channel_id', CHANNEL_ID);
-        localStorage.setItem('yt_api_key', API_KEY);
-        // =============================================
-
-        let liveChatId = null;
-        let lastMessageTime = null;
-
-        // 1. Récupération des abonnés
         async function fetchSubscriberCount() {
             try {
                 const response = await fetch(`https://api.socialcounts.org/youtube-live-subscriber-count/${CHANNEL_ID}`);
@@ -219,76 +209,9 @@
             }
         }
 
-        // 2. Détection du live en cours
-        async function findActiveLiveChat() {
-            if (!API_KEY || API_KEY === "TA_CLE_API_ICI" || !CHANNEL_ID || CHANNEL_ID === "TON_ID_UC_ICI") return;
-            
-            try {
-                const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&type=video&eventType=live&key=${API_KEY}`;
-                const response = await fetch(searchUrl);
-                const data = await response.json();
-
-                if (data.items && data.items.length > 0) {
-                    const videoId = data.items[0].id.videoId;
-                    
-                    const videoUrl = `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${videoId}&key=${API_KEY}`;
-                    const videoResponse = await fetch(videoUrl);
-                    const videoData = await videoResponse.json();
-
-                    if (videoData.items && videoData.items[0].liveStreamingDetails) {
-                        liveChatId = videoData.items[0].liveStreamingDetails.activeLiveChatId;
-                        document.getElementById('chatBox').innerHTML = `<div class="chat-message"><span class="chat-user">Système :</span> Chat connecté !</div>`;
-                        fetchLiveChatMessages();
-                    }
-                } else {
-                    document.getElementById('chatBox').innerHTML = `<div class="chat-message"><span class="chat-user">Système :</span> Aucun live détecté.</div>`;
-                }
-            } catch (error) {
-                console.error("Erreur recherche live :", error);
-            }
-        }
-
-        // 3. Messages du chat
-        async function fetchLiveChatMessages() {
-            if (!liveChatId) return;
-
-            try {
-                const chatUrl = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&key=${API_KEY}`;
-                const response = await fetch(chatUrl);
-                const data = await response.json();
-
-                if (data.items) {
-                    const chatBox = document.getElementById('chatBox');
-                    
-                    data.items.forEach(item => {
-                        const messageTime = new Date(item.snippet.publishedAt).getTime();
-                        
-                        if (!lastMessageTime || messageTime > lastMessageTime) {
-                            const author = item.authorDetails.displayName;
-                            const message = item.snippet.displayMessage;
-
-                            const msgElement = document.createElement('div');
-                            msgElement.className = 'chat-message';
-                            msgElement.innerHTML = `<span class="chat-user">${author} :</span> ${message}`;
-                            
-                            chatBox.appendChild(msgElement);
-                            chatBox.scrollTop = chatBox.scrollHeight;
-                            
-                            lastMessageTime = messageTime;
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error("Erreur messages chat :", error);
-            }
-        }
-
+        // Lancer la récupération des abonnés en temps réel
         fetchSubscriberCount();
         setInterval(fetchSubscriberCount, 5000);
-
-        findActiveLiveChat();
-        setInterval(findActiveLiveChat, 60000);
-        setInterval(fetchLiveChatMessages, 5000);
     </script>
 </body>
 </html>
